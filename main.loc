@@ -1,0 +1,427 @@
+module root-rust (*)
+
+import root
+
+type Rust => Unit = "()"
+type Rust => Real = "f64"
+type Rust => Int = "i64"
+type Rust => Str = "String"
+type Rust => Bool = "bool"
+type Rust => (List a) = "Vec<$1>" a
+type Rust => (Deque a) = "std::collections::VecDeque<$1>" a
+type Rust => (Tuple2 a b) = "($1, $2)" a b
+type Rust => (Tuple3 a b c) = "($1, $2, $3)" a b c
+type Rust => (Tuple4 a b c d) = "($1, $2, $3, $4)" a b c d
+type Rust => (Tuple5 a b c d e) = "($1, $2, $3, $4, $5)" a b c d e
+type Rust => (Tuple6 a b c d e f) = "($1, $2, $3, $4, $5, $6)" a b c d e f
+type Rust => (Tuple7 a b c d e f g) = "($1, $2, $3, $4, $5, $6, $7)" a b c d e f g
+type Rust => (Tuple8 a b c d e f g h) = "($1, $2, $3, $4, $5, $6, $7, $8)" a b c d e f g h
+
+type Rust => F64 = "f64"
+type Rust => F32 = "f32"
+type Rust => I8    = "i8"
+type Rust => I16   = "i16"
+type Rust => I32   = "i32"
+type Rust => I64   = "i64"
+type Rust => U8   = "u8"
+type Rust => U16  = "u16"
+type Rust => U32  = "u32"
+type Rust => U64  = "u64"
+
+type Rust => (IFile a) = "u64"
+type Rust => (IStream a) = "u64"
+type Rust => (OStream a) = "u64"
+
+-- used to force Rust usage, mostly in testing
+idrust :: a -> a
+
+instance Sizeable Str
+       , Sizeable (List a) where
+  source Rust from "core.rs" ("morloc_size" as size)
+
+
+source Rust from "core.rs"
+    ( "morloc_id" as idrust
+    , "morloc_not" as not
+    , "morloc_and" as (&&)
+    , "morloc_or" as (||)
+    , "morloc_zipWith" as zipWith
+    , "morloc_sort" as sort
+    , "morloc_sortBy" as sortBy
+    , "morloc_filter" as filter
+    , "morloc_unzip" as unzip
+    , "morloc_replicate" as replicate
+    , "morloc_takeWhile" as takeWhile
+    , "morloc_dropWhile" as dropWhile
+    , "morloc_partition" as partition
+    , "morloc_scanl" as scanl
+    , "morloc_enumerate" as enumerate
+    , "morloc_intersperse" as intersperse
+    , "morloc_iterate" as iterate
+    , "morloc_groupBy" as groupBy
+    , "morloc_find" as find
+    , "morloc_unique" as unique
+    , "morloc_groupSort" as groupSort
+    , "morloc_range" as range
+    , "morloc_rangeStep" as rangeStep
+    )
+
+instance Eq a where
+  source Rust from "core.rs" ("morloc_eq" as (==))
+
+instance Ord a where
+  source Rust from "core.rs" ("morloc_le" as (<=))
+
+instance Integral Int
+       , Integral I8
+       , Integral I16
+       , Integral I32
+       , Integral I64
+       , Integral U8
+       , Integral U16
+       , Integral U32
+       , Integral U64 where
+  source Rust from "core.rs"
+    ( "morloc_neg" as neg
+    , "morloc_abs" as abs
+    , "morloc_add" as (+)
+    , "morloc_sub" as (-)
+    , "morloc_mul" as (*)
+    , "morloc_int_div" as (//)
+    , "morloc_int_mod" as (%)
+    , "morloc_pow" as (**)
+    )
+  zero = 0
+
+instance Integral Real
+       , Integral F32
+       , Integral F64 where
+  source Rust from "core.rs"
+    ( "morloc_neg" as neg
+    , "morloc_abs" as abs
+    , "morloc_add" as (+)
+    , "morloc_sub" as (-)
+    , "morloc_mul" as (*)
+    , "morloc_floor_div" as (//)
+    , "morloc_float_mod" as (%)
+    , "morloc_pow" as (**)
+    )
+  zero = 0.0
+
+instance Negatable Int
+       , Negatable I8
+       , Negatable I16
+       , Negatable I32
+       , Negatable I64
+       , Negatable U8
+       , Negatable U16
+       , Negatable U32
+       , Negatable U64
+       , Negatable Real
+       , Negatable F32
+       , Negatable F64 where
+  source Rust from "core.rs" ("morloc_neg" as negate)
+
+instance Numeric Real
+       , Numeric F32
+       , Numeric F64 where
+  source Rust from "core.rs"
+    ( "morloc_inv" as inv
+    , "morloc_ln" as ln
+    , "morloc_div" as (/)
+    )
+
+instance Semigroup Str where
+  source Rust from "core.rs" ("morloc_str_add" as (<>))
+
+instance Monoid Str where
+  mempty = ""
+
+
+-- List and Deque are distinct Rust types (Vec / VecDeque). Rust has no ad-hoc
+-- overloading, so each container sources its own concrete function.
+instance Semigroup (List a) where
+  source Rust from "core.rs" ("morloc_list_add" as (<>))
+
+instance Semigroup (Deque a) where
+  source Rust from "core.rs" ("morloc_deque_add" as (<>))
+
+
+instance Monoid (List a)
+       , Monoid (Deque a) where
+  mempty = []
+
+instance Functor List where
+  source Rust from "core.rs" ("morloc_map_vec" as map)
+
+instance Functor Deque where
+  source Rust from "core.rs" ("morloc_map_deque" as map)
+
+instance Foldable List where
+  source Rust from "core.rs"
+    ( "morloc_fold_vec" as fold
+    , "morloc_fold1_vec" as fold1
+    , "morloc_safe_fold1_vec" as safeFold1
+    )
+
+instance Foldable Deque where
+  source Rust from "core.rs"
+    ( "morloc_fold_deque" as fold
+    , "morloc_fold1_deque" as fold1
+    , "morloc_safe_fold1_deque" as safeFold1
+    )
+
+instance Indexable List where
+  source Rust from "core.rs" ("morloc_at" as __access_index__)
+
+instance Sliceable List where
+  source Rust from "core.rs" ("morloc_slice" as __get_slice__)
+
+instance IndexLike Int
+       , IndexLike I8
+       , IndexLike I16
+       , IndexLike I32
+       , IndexLike I64
+       , IndexLike U8
+       , IndexLike U16
+       , IndexLike U32
+       , IndexLike U64
+       , IndexLike (?Int)
+       , IndexLike (?I8)
+       , IndexLike (?I16)
+       , IndexLike (?I32)
+       , IndexLike (?I64)
+       , IndexLike (?U8)
+       , IndexLike (?U16)
+       , IndexLike (?U32)
+       , IndexLike (?U64) where
+  source Rust from "core.rs" ("morloc_to_index" as __to_index__)
+
+instance Stack List where
+  source Rust from "core.rs"
+    ( "morloc_cons_vec" as cons
+    , "morloc_uncons_vec" as uncons
+    )
+
+instance Stack Deque where
+  source Rust from "core.rs"
+    ( "morloc_cons_deque" as cons
+    , "morloc_uncons_deque" as uncons
+    )
+
+instance Queue List where
+  source Rust from "core.rs"
+    ( "morloc_snoc_vec" as snoc
+    , "morloc_unsnoc_vec" as unsnoc
+    )
+
+instance Queue Deque where
+  source Rust from "core.rs"
+    ( "morloc_snoc_deque" as snoc
+    , "morloc_unsnoc_deque" as unsnoc
+    )
+
+
+instance Show a where
+  show x = @show x
+
+instance Readable a where
+  read x = @read x
+
+-------------------------------------------------------------------------------
+--                 Pack and Unpack internal functions
+-- These functions are used by morloc internally for (de)serialization of types
+-- that cannot be automatically (de)serialized. They should not be exported.
+-------------------------------------------------------------------------------
+
+instance Packable (Int) Unit where
+  source Rust from "data.rs"
+   ( "morloc_pack_unit" as pack
+   , "morloc_unpack_unit" as unpack
+   )
+
+instance Packable (List a) (Deque a) where
+  source Rust from "core.rs"
+   ( "morloc_pack_deque" as pack
+   , "morloc_unpack_deque" as unpack
+   )
+
+
+-------------------------------------------------------------------------------
+--                Conversion functions
+-------------------------------------------------------------------------------
+
+instance RealLike Int
+       , RealLike I8
+       , RealLike I16
+       , RealLike I32
+       , RealLike I64
+       , RealLike U8
+       , RealLike U16
+       , RealLike U32
+       , RealLike U64
+       , RealLike F32
+       , RealLike F64
+       , RealLike Real where
+  source Rust from "core.rs" ("morloc_to_real" as toReal)
+
+-- TotalInto: lossless total conversions, grouped by target.
+
+instance TotalInto U8 U16 where
+  source Rust from "core.rs" ("morloc_into_u16" as into)
+
+instance TotalInto U8 U32
+       , TotalInto U16 U32 where
+  source Rust from "core.rs" ("morloc_into_u32" as into)
+
+instance TotalInto U8 U64
+       , TotalInto U16 U64
+       , TotalInto U32 U64 where
+  source Rust from "core.rs" ("morloc_into_u64" as into)
+
+instance TotalInto I8 I16
+       , TotalInto U8 I16 where
+  source Rust from "core.rs" ("morloc_into_i16" as into)
+
+instance TotalInto I8 I32
+       , TotalInto I16 I32
+       , TotalInto U8 I32
+       , TotalInto U16 I32 where
+  source Rust from "core.rs" ("morloc_into_i32" as into)
+
+instance TotalInto I8 I64
+       , TotalInto I16 I64
+       , TotalInto I32 I64
+       , TotalInto U8 I64
+       , TotalInto U16 I64
+       , TotalInto U32 I64 where
+  source Rust from "core.rs" ("morloc_into_i64" as into)
+
+instance TotalInto I8 Int
+       , TotalInto I16 Int
+       , TotalInto I32 Int
+       , TotalInto U8 Int
+       , TotalInto U16 Int where
+  source Rust from "core.rs" ("morloc_into_int" as into)
+
+instance TotalInto I8 F32
+       , TotalInto I16 F32
+       , TotalInto U8 F32
+       , TotalInto U16 F32 where
+  source Rust from "core.rs" ("morloc_into_f32" as into)
+
+instance TotalInto I8 F64
+       , TotalInto I16 F64
+       , TotalInto I32 F64
+       , TotalInto U8 F64
+       , TotalInto U16 F64
+       , TotalInto U32 F64
+       , TotalInto F32 F64
+       , TotalInto Real F64 where
+  source Rust from "core.rs" ("morloc_into_f64" as into)
+
+instance TotalInto I8 Real
+       , TotalInto I16 Real
+       , TotalInto I32 Real
+       , TotalInto U8 Real
+       , TotalInto U16 Real
+       , TotalInto U32 Real
+       , TotalInto F32 Real
+       , TotalInto F64 Real where
+  source Rust from "core.rs" ("morloc_into_f64" as into)
+
+-- PartialInto: partial conversions, grouped by target.
+
+instance PartialInto U16 U8
+       , PartialInto U32 U8
+       , PartialInto U64 U8
+       , PartialInto I8 U8
+       , PartialInto I16 U8
+       , PartialInto I32 U8
+       , PartialInto I64 U8
+       , PartialInto F32 U8
+       , PartialInto F64 U8
+       , PartialInto Real U8
+       , PartialInto Int U8 where
+  source Rust from "core.rs" ("morloc_try_u8" as tryInto)
+
+instance PartialInto U32 U16
+       , PartialInto U64 U16
+       , PartialInto I8 U16
+       , PartialInto I16 U16
+       , PartialInto I32 U16
+       , PartialInto I64 U16
+       , PartialInto F32 U16
+       , PartialInto F64 U16
+       , PartialInto Real U16
+       , PartialInto Int U16 where
+  source Rust from "core.rs" ("morloc_try_u16" as tryInto)
+
+instance PartialInto U64 U32
+       , PartialInto I8 U32
+       , PartialInto I16 U32
+       , PartialInto I32 U32
+       , PartialInto I64 U32
+       , PartialInto F32 U32
+       , PartialInto F64 U32
+       , PartialInto Real U32
+       , PartialInto Int U32 where
+  source Rust from "core.rs" ("morloc_try_u32" as tryInto)
+
+instance PartialInto I8 U64
+       , PartialInto I16 U64
+       , PartialInto I32 U64
+       , PartialInto I64 U64
+       , PartialInto F32 U64
+       , PartialInto F64 U64
+       , PartialInto Real U64
+       , PartialInto Int U64 where
+  source Rust from "core.rs" ("morloc_try_u64" as tryInto)
+
+instance PartialInto U8 I8
+       , PartialInto U16 I8
+       , PartialInto U32 I8
+       , PartialInto U64 I8
+       , PartialInto I16 I8
+       , PartialInto I32 I8
+       , PartialInto I64 I8
+       , PartialInto F32 I8
+       , PartialInto F64 I8
+       , PartialInto Real I8
+       , PartialInto Int I8 where
+  source Rust from "core.rs" ("morloc_try_i8" as tryInto)
+
+instance PartialInto U16 I16
+       , PartialInto U32 I16
+       , PartialInto U64 I16
+       , PartialInto I32 I16
+       , PartialInto I64 I16
+       , PartialInto F32 I16
+       , PartialInto F64 I16
+       , PartialInto Real I16
+       , PartialInto Int I16 where
+  source Rust from "core.rs" ("morloc_try_i16" as tryInto)
+
+instance PartialInto U32 I32
+       , PartialInto U64 I32
+       , PartialInto I64 I32
+       , PartialInto F32 I32
+       , PartialInto F64 I32
+       , PartialInto Real I32
+       , PartialInto Int I32 where
+  source Rust from "core.rs" ("morloc_try_i32" as tryInto)
+
+instance PartialInto U64 I64
+       , PartialInto F32 I64
+       , PartialInto F64 I64
+       , PartialInto Real I64
+       , PartialInto Int I64 where
+  source Rust from "core.rs" ("morloc_try_i64" as tryInto)
+
+instance PartialInto U32 Int
+       , PartialInto U64 Int
+       , PartialInto I64 Int
+       , PartialInto F32 Int
+       , PartialInto F64 Int
+       , PartialInto Real Int where
+  source Rust from "core.rs" ("morloc_try_int" as tryInto)

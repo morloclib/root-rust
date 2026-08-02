@@ -1,0 +1,11 @@
+name: root-rust
+version: 0.7.0
+homepage: https://github.com/morloclib/root-rust
+synopsis: Rust implementations for root functions
+description: Rust implementations for root functions
+category: language-base
+license: MIT
+author: "Zebulun Arendsee"
+maintainer: "z@morloc.io"
+github: https://github.com/morloclib/root-rust
+bug-reports: https://github.com/morloclib/root-rust
