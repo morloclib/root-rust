@@ -28,9 +28,9 @@ type Rust => U16  = "u16"
 type Rust => U32  = "u32"
 type Rust => U64  = "u64"
 
-type Rust => (IFile a) = "u64"
-type Rust => (IStream a) = "u64"
-type Rust => (OStream a) = "u64"
+type Rust => (IFile a) = "u64" a
+type Rust => (IStream a) = "u64" a
+type Rust => (OStream a) = "u64" a
 
 -- used to force Rust usage, mostly in testing
 idrust :: a -> a
