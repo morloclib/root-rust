@@ -11,7 +11,7 @@
 // through small traits macro-implemented over the concrete numeric types, so a
 // single generic morloc method dispatches to the right per-type operation.
 
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::VecDeque;
 
 // ===========================================================================
 // Booleans, identity, comparison
@@ -477,26 +477,66 @@ pub fn morloc_zipWith<A, B, C, F: Fn(&A, &B) -> C>(f: F, xs: &[A], ys: &[B]) -> 
     xs.iter().zip(ys.iter()).map(|(a, b)| f(a, b)).collect()
 }
 
-pub fn morloc_sort<A: Ord + Clone>(xs: &[A]) -> Vec<A> {
-    let mut v = xs.to_vec();
-    v.sort();
-    v
+// Stable bottom-up merge sort driven by a non-strict "a is not after b"
+// predicate: `first(a, b)` must hold when a and b are equivalent.
+//
+// The standard library's sort_by needs a comparator that is a total order and
+// panics when it detects one that is not. Both callers below are handed an
+// order that need not be total: morloc's `Ord` class admits Real, whose Rust
+// form f64 is only PartialOrd (every comparison against NaN is false), and
+// sortBy takes an arbitrary user predicate. A merge sort has no such
+// requirement -- any predicate yields a permutation of the input -- and it is
+// stable, so equal elements keep their input order.
+fn morloc_merge_sort_by<A: Clone, F: Fn(&A, &A) -> bool>(xs: &[A], first: F) -> Vec<A> {
+    let mut src = xs.to_vec();
+    let n = src.len();
+    let mut dst = src.clone();
+    let mut width = 1;
+    while width < n {
+        let mut lo = 0;
+        while lo < n {
+            let mid = std::cmp::min(lo + width, n);
+            let hi = std::cmp::min(lo + 2 * width, n);
+            let (mut i, mut j) = (lo, mid);
+            for k in lo..hi {
+                // Take from the left run unless it is exhausted. `first` is
+                // non-strict, so on a tie it holds and the left element wins --
+                // which is what makes the sort stable.
+                let take_left = if i >= mid {
+                    false
+                } else if j >= hi {
+                    true
+                } else {
+                    first(&src[i], &src[j])
+                };
+                if take_left {
+                    dst[k] = src[i].clone();
+                    i += 1;
+                } else {
+                    dst[k] = src[j].clone();
+                    j += 1;
+                }
+            }
+            lo = hi;
+        }
+        std::mem::swap(&mut src, &mut dst);
+        width *= 2;
+    }
+    src
 }
 
-// sortBy takes a "less-than" predicate; derive a total ordering from it.
+// PartialOrd, not Ord: morloc's `Ord` class has a universal instance and Real
+// maps to f64, which does not implement Ord. NaN compares false against
+// everything, so it sorts to a well-defined position rather than panicking.
+pub fn morloc_sort<A: PartialOrd + Clone>(xs: &[A]) -> Vec<A> {
+    morloc_merge_sort_by(xs, |a, b| a <= b)
+}
+
+// sortBy takes a "less-than" predicate: x precedes y when cmp(x, y). The
+// element that "goes first" is therefore the one the predicate does not place
+// after the other.
 pub fn morloc_sortBy<A: Clone, F: Fn(&A, &A) -> bool>(cmp: F, xs: &[A]) -> Vec<A> {
-    use std::cmp::Ordering;
-    let mut v = xs.to_vec();
-    v.sort_by(|a, b| {
-        if cmp(a, b) {
-            Ordering::Less
-        } else if cmp(b, a) {
-            Ordering::Greater
-        } else {
-            Ordering::Equal
-        }
-    });
-    v
+    morloc_merge_sort_by(xs, |a, b| !cmp(b, a))
 }
 
 pub fn morloc_filter<A: Clone, F: Fn(&A) -> bool>(f: F, xs: &[A]) -> Vec<A> {
@@ -585,13 +625,20 @@ pub fn morloc_unique<A: PartialEq + Clone>(xs: &[A]) -> Vec<A> {
     out
 }
 
-// Group values by key (Ord), keys ascending.
-pub fn morloc_groupSort<A: Ord + Clone, B: Clone>(xs: &[(A, B)]) -> Vec<(A, Vec<B>)> {
-    let mut groups: BTreeMap<A, Vec<B>> = BTreeMap::new();
-    for (a, b) in xs {
-        groups.entry(a.clone()).or_default().push(b.clone());
+// Group values by key, keys ascending, values in input order. Equal keys are
+// merged wherever they occur, not only in runs: the stable sort brings every
+// occurrence of a key together first. PartialOrd for the same reason as
+// morloc_sort -- a Real key must work.
+pub fn morloc_groupSort<A: PartialOrd + Clone, B: Clone>(xs: &[(A, B)]) -> Vec<(A, Vec<B>)> {
+    let sorted = morloc_merge_sort_by(xs, |x, y| x.0 <= y.0);
+    let mut out: Vec<(A, Vec<B>)> = Vec::new();
+    for (a, b) in sorted {
+        match out.last_mut() {
+            Some((key, vals)) if *key == a => vals.push(b),
+            _ => out.push((a, vec![b])),
+        }
     }
-    groups.into_iter().collect()
+    out
 }
 
 pub fn morloc_range(a: i64, b: i64) -> Vec<i64> {
