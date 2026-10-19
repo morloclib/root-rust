@@ -44,8 +44,6 @@ instance Sizeable Str
 source Rust from "core.rs"
     ( "morloc_id" as idrust
     , "morloc_not" as not
-    , "morloc_and" as (&&)
-    , "morloc_or" as (||)
     , "morloc_zipWith" as zipWith
     , "morloc_sort" as sort
     , "morloc_sortBy" as sortBy

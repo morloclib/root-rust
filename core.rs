@@ -18,8 +18,6 @@ use std::collections::VecDeque;
 // ===========================================================================
 
 pub fn morloc_not(x: bool) -> bool { !x }
-pub fn morloc_and(x: bool, y: bool) -> bool { x && y }
-pub fn morloc_or(x: bool, y: bool) -> bool { x || y }
 
 // idrust: force a value through the Rust pool (mostly for testing).
 pub fn morloc_id<A: Clone>(x: &A) -> A { x.clone() }
