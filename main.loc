@@ -135,6 +135,7 @@ instance Semigroup Str where
 
 instance Monoid Str where
   mempty = ""
+  source Rust from "core.rs" ("morloc_str_mconcat" as mconcat)
 
 
 -- List and Deque are distinct Rust types (Vec / VecDeque). Rust has no ad-hoc
@@ -146,9 +147,13 @@ instance Semigroup (Deque a) where
   source Rust from "core.rs" ("morloc_deque_add" as (<>))
 
 
-instance Monoid (List a)
-       , Monoid (Deque a) where
+instance Monoid (List a) where
   mempty = []
+  source Rust from "core.rs" ("morloc_list_mconcat" as mconcat)
+
+instance Monoid (Deque a) where
+  mempty = []
+  source Rust from "core.rs" ("morloc_deque_mconcat" as mconcat)
 
 instance Functor List where
   source Rust from "core.rs" ("morloc_map_vec" as map)

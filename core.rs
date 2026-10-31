@@ -265,6 +265,30 @@ pub fn morloc_deque_add<A: Clone>(xs: &VecDeque<A>, ys: &VecDeque<A>) -> VecDequ
 }
 
 // ===========================================================================
+// Monoid
+// ===========================================================================
+
+pub fn morloc_str_mconcat(xs: &[String]) -> String {
+    xs.concat()
+}
+
+pub fn morloc_list_mconcat<A: Clone>(xss: &[Vec<A>]) -> Vec<A> {
+    let mut v = Vec::with_capacity(xss.iter().map(|xs| xs.len()).sum());
+    for xs in xss {
+        v.extend_from_slice(xs);
+    }
+    v
+}
+
+pub fn morloc_deque_mconcat<A: Clone>(xss: &[VecDeque<A>]) -> VecDeque<A> {
+    let mut v = VecDeque::with_capacity(xss.iter().map(|xs| xs.len()).sum());
+    for xs in xss {
+        v.extend(xs.iter().cloned());
+    }
+    v
+}
+
+// ===========================================================================
 // Functor
 // ===========================================================================
 
