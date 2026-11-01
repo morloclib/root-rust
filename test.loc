@@ -1,4 +1,6 @@
 module test-root-rust (test)
 
-import root.test (test)
+import root.test (rootSuite)
 import root-rust
+
+test = rootSuite True
